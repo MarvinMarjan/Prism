@@ -16,7 +16,7 @@ public class ClientList : ICommand
 
 		PrismServer server = ServerState.Server;
 
-		server.ServerMessage("Clients connected: " + string.Join(", ", server.GetAllClientNames()));
+		server.Logger.ServerMessage("Clients connected: " + string.Join(", ", server.GetAllClientNames()));
 	}
 }
 

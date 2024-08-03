@@ -11,26 +11,69 @@ using Specter.String;
 namespace ExampleProgram;
 
 
+public class Logger : ILogger
+{
+	private string BuildMessageInformation(DataTransferStructure requestData)
+		=> $"[{requestData.ClientName}]";
+
+
+	public void ServerMessage(string message)
+	{
+		Console.WriteLine(Painter.Paint($"* {message}", ColorValue.Bold));
+	}
+
+	public void ServerWarning(string message)
+	{
+		Console.WriteLine(Painter.Paint($"* {message}", ColorValue.FGBYellow + ColorValue.Bold));
+	}
+
+	public void ServerError(string message)
+	{
+		Console.WriteLine(Painter.Paint($"* {message}", ColorValue.FGBRed+ ColorValue.Bold));
+	}
+
+
+
+	public void Message(string message, DataTransferStructure requestData)
+	{
+		Console.WriteLine(BuildMessageInformation(requestData) + $" {message}");
+	}
+
+	public void Warning(string message, DataTransferStructure requestData)
+	{
+		Console.WriteLine(ColorValue.FGBYellow.Paint(BuildMessageInformation(requestData) + $" {message}"));
+
+	}
+
+	public void Error(string message, DataTransferStructure requestData)
+	{
+		Console.WriteLine(ColorValue.FGBRed.Paint(BuildMessageInformation(requestData) + $" {message}"));
+	}
+}
+
+
 public class Server : PrismServer
 {
 	private readonly Thread _waitForNewClientsThread;
 
 
 	public Server(int port)
-		: base(port)
+		: base(port, new Logger())
 	{
 		// stay listening for new clients in a separated thread
 		_waitForNewClientsThread = new(new ThreadStart(WaitForNewClientsThread));
 		_waitForNewClientsThread.Start();
 
 		// events
-		RequestListenerFailedEvent += OnRequestListenerFail;
 		ClientAddedEvent += OnClientAdded;
 		ClientRemovedEvent += OnClientRemoved;
 		ClientRegistrationStartEvent += OnClientRegistrationStart;
 		ClientRegistrationEndEvent += OnClientRegistrationEnd;
 
-		ServerMessage($"Server running at port {ColorValue.Underline.Paint(port.ToString())}.");
+		RequestManager.ClientRequestListenerAddedEvent
+			+= listener => listener.RequestListenerFailedEvent += OnRequestListenerFail;
+
+		Logger.ServerMessage($"Server running at port {ColorValue.Underline.Paint(port.ToString())}.");
 	}
 
 
@@ -44,68 +87,28 @@ public class Server : PrismServer
 			}
 			catch (Exception e)
 			{
-				ServerError(e.ToString());
+				Logger.ServerError(e.ToString());
 			}
 		}
 	}
 
 
 
-	private void OnRequestListenerFail(PrismClient client, Exception exception)
-		=> ServerError(exception.Message);
+	private void OnRequestListenerFail(RequestListener listener, Exception exception)
+		=> Logger.ServerError(exception.Message);
 
 
 	private void OnClientRegistrationStart()
-		=> ServerMessage("New client connected, waiting for registration...");
+		=> Logger.ServerMessage("New client connected, waiting for registration...");
 
 	private void OnClientRegistrationEnd(PrismClient client)
-		=> ServerMessage($"Client registrated as {client.Name.FGBGreen()}");
+		=> Logger.ServerMessage($"Client registrated as {client.Name.FGBGreen()}");
 
 	private void OnClientAdded(PrismClient client)
-		=> ServerMessage($"Added client {client.Name.FGBGreen()}");
+		=> Logger.ServerMessage($"Added client {client.Name.FGBGreen()}");
 
 	private void OnClientRemoved(PrismClient client)
-		=> ServerMessage($"Removed client {client.Name.FGBGreen()}");
-
-
-
-	private string BuildMessageInformation(DataTransferStructure requestData)
-		=> $"[{requestData.ClientName}]";
-
-
-
-	public override void ServerMessage(string message)
-	{
-		Console.WriteLine(Painter.Paint($"* {message}", ColorValue.Bold));
-	}
-
-	public override void ServerWarning(string message)
-	{
-		Console.WriteLine(Painter.Paint($"* {message}", ColorValue.FGBYellow + ColorValue.Bold));
-	}
-
-	public override void ServerError(string message)
-	{
-		Console.WriteLine(Painter.Paint($"* {message}", ColorValue.FGBRed+ ColorValue.Bold));
-	}
-
-
-
-	public override void Message(string message, DataTransferStructure requestData)
-	{
-		Console.WriteLine(BuildMessageInformation(requestData) + $" {message}");
-	}
-
-	public override void Warning(string message, DataTransferStructure requestData)
-	{
-		Console.WriteLine(ColorValue.FGBYellow.Paint(BuildMessageInformation(requestData) + $" {message}"));
-
-	}
-
-	public override void Error(string message, DataTransferStructure requestData)
-	{
-		Console.WriteLine(ColorValue.FGBRed.Paint(BuildMessageInformation(requestData) + $" {message}"));
-	}
+		=> Logger.ServerMessage($"Removed client {client.Name.FGBGreen()}");
 }
 
 
@@ -119,11 +122,11 @@ public class PrismServerTesting
 		{
 			try
 			{
-				server.ProcessRequests();
+				server.RequestManager.ProcessRequests();
 			}
 			catch (Exception e)
 			{
-				server.ServerError(e.ToString());
+				server.Logger.ServerError(e.ToString());
 			}
 		}
 	}

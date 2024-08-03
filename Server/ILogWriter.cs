@@ -3,7 +3,7 @@
 namespace Specter.Debug.Prism.Server;
 
 
-public interface ILogWriter
+public interface ILogger
 {
 	public void ServerMessage(string message);
 	public void ServerWarning(string message);

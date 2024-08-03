@@ -99,16 +99,33 @@ public class TooMuchRequestsException : ClientException
 
 
 [Serializable]
-public class ClientRequestDoesNotExists : ClientException
+public class ClientRequestDoesNotExistsException : ClientException
 {
-	public ClientRequestDoesNotExists()
+	public ClientRequestDoesNotExistsException()
 	{ }
 
-	public ClientRequestDoesNotExists(string clientName, string message)
+	public ClientRequestDoesNotExistsException(string clientName, string message)
 		: base(clientName, message)
 	{ }
 
-	public ClientRequestDoesNotExists(string clientName, string message, Exception inner)
+	public ClientRequestDoesNotExistsException(string clientName, string message, Exception inner)
+		: base(clientName, message, inner)
+	{ }
+}
+
+
+
+[Serializable]
+public class InvalidClientRequestException : ClientException
+{
+	public InvalidClientRequestException()
+	{ }
+
+	public InvalidClientRequestException(string clientName, string message)
+		: base(clientName, message)
+	{ }
+
+	public InvalidClientRequestException(string clientName, string message, Exception inner)
 		: base(clientName, message, inner)
 	{ }
 }
