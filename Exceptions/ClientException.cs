@@ -7,25 +7,25 @@ namespace Specter.Debug.Prism.Exceptions;
 [Serializable]
 public class ClientException : Exception
 {
-	public string? ClientName { get; init; }
+    public string? ClientName { get; init; }
 
 
-	public ClientException()
-	{ }
+    public ClientException()
+    { }
 
-	public ClientException(string clientName, string message) : base(message)
-	{
-		ClientName = clientName;
-	}
+    public ClientException(string clientName, string message) : base(message)
+    {
+        ClientName = clientName;
+    }
 
-	public ClientException(string clientName, string message, Exception inner) : base(message, inner)
-	{
-		ClientName = clientName;
-	}
+    public ClientException(string clientName, string message, Exception inner) : base(message, inner)
+    {
+        ClientName = clientName;
+    }
 
 
-	public override string ToString()
-		=> Message + $@" (""{ClientName}"")";
+    public override string ToString()
+        => Message + $@" (""{ClientName}"")";
 }
 
 
@@ -33,16 +33,16 @@ public class ClientException : Exception
 [Serializable]
 public class ClientAlreadyExistsException : ClientException
 {
-	public ClientAlreadyExistsException()
-	{ }
+    public ClientAlreadyExistsException()
+    { }
 
-	public ClientAlreadyExistsException(string clientName, string message)
-		: base(clientName, message)
-	{ }
-	
-	public ClientAlreadyExistsException(string clientName, string message, Exception inner)
-		: base(clientName, message, inner)
-	{ }
+    public ClientAlreadyExistsException(string clientName, string message)
+        : base(clientName, message)
+    { }
+
+    public ClientAlreadyExistsException(string clientName, string message, Exception inner)
+        : base(clientName, message, inner)
+    { }
 }
 
 
@@ -50,16 +50,16 @@ public class ClientAlreadyExistsException : ClientException
 [Serializable]
 public class ClientDoesNotExistsException : ClientException
 {
-	public ClientDoesNotExistsException()
-	{ }
+    public ClientDoesNotExistsException()
+    { }
 
-	public ClientDoesNotExistsException(string clientName, string message)
-		: base(clientName, message)
-	{ }
-	
-	public ClientDoesNotExistsException(string clientName, string message, Exception inner)
-		: base(clientName, message, inner)
-	{ }
+    public ClientDoesNotExistsException(string clientName, string message)
+        : base(clientName, message)
+    { }
+
+    public ClientDoesNotExistsException(string clientName, string message, Exception inner)
+        : base(clientName, message, inner)
+    { }
 }
 
 
@@ -67,16 +67,16 @@ public class ClientDoesNotExistsException : ClientException
 [Serializable]
 public class ClientRequestListenerAlreadyExistsException : ClientException
 {
-	public ClientRequestListenerAlreadyExistsException()
-	{ }
-	
-	public ClientRequestListenerAlreadyExistsException(string clientName, string message)
-		: base(clientName, message)
-	{ }
-	
-	public ClientRequestListenerAlreadyExistsException(string clientName, string message, Exception inner)
-		: base(clientName, message, inner)
-	{ }
+    public ClientRequestListenerAlreadyExistsException()
+    { }
+
+    public ClientRequestListenerAlreadyExistsException(string clientName, string message)
+        : base(clientName, message)
+    { }
+
+    public ClientRequestListenerAlreadyExistsException(string clientName, string message, Exception inner)
+        : base(clientName, message, inner)
+    { }
 }
 
 
@@ -84,16 +84,16 @@ public class ClientRequestListenerAlreadyExistsException : ClientException
 [Serializable]
 public class TooMuchRequestsException : ClientException
 {
-	public TooMuchRequestsException()
-	{ }
+    public TooMuchRequestsException()
+    { }
 
-	public TooMuchRequestsException(string clientName, string message)
-		: base(clientName, message)
-	{ }
+    public TooMuchRequestsException(string clientName, string message)
+        : base(clientName, message)
+    { }
 
-	public TooMuchRequestsException(string clientName, string message, Exception inner)
-		: base(clientName, message, inner)
-	{ }
+    public TooMuchRequestsException(string clientName, string message, Exception inner)
+        : base(clientName, message, inner)
+    { }
 }
 
 
@@ -101,16 +101,16 @@ public class TooMuchRequestsException : ClientException
 [Serializable]
 public class ClientRequestDoesNotExistsException : ClientException
 {
-	public ClientRequestDoesNotExistsException()
-	{ }
+    public ClientRequestDoesNotExistsException()
+    { }
 
-	public ClientRequestDoesNotExistsException(string clientName, string message)
-		: base(clientName, message)
-	{ }
+    public ClientRequestDoesNotExistsException(string clientName, string message)
+        : base(clientName, message)
+    { }
 
-	public ClientRequestDoesNotExistsException(string clientName, string message, Exception inner)
-		: base(clientName, message, inner)
-	{ }
+    public ClientRequestDoesNotExistsException(string clientName, string message, Exception inner)
+        : base(clientName, message, inner)
+    { }
 }
 
 
@@ -118,14 +118,14 @@ public class ClientRequestDoesNotExistsException : ClientException
 [Serializable]
 public class InvalidClientRequestException : ClientException
 {
-	public InvalidClientRequestException()
-	{ }
+    public InvalidClientRequestException()
+    { }
 
-	public InvalidClientRequestException(string clientName, string message)
-		: base(clientName, message)
-	{ }
+    public InvalidClientRequestException(string clientName, string message)
+        : base(clientName, message)
+    { }
 
-	public InvalidClientRequestException(string clientName, string message, Exception inner)
-		: base(clientName, message, inner)
-	{ }
+    public InvalidClientRequestException(string clientName, string message, Exception inner)
+        : base(clientName, message, inner)
+    { }
 }

@@ -7,106 +7,106 @@ namespace Specter.Debug.Prism.Commands;
 
 public class Scanner
 {
-	private string _source = "";
-	private int _start, _end; 
+    private string _source = "";
+    private int _start, _end;
 
-	private readonly List<Token> _tokens = [];
-
-
-	public List<Token> Scan(string source)
-	{
-		_tokens.Clear();
-
-		_source = source;
-		_start = _end = 0;
-
-		while (!AtEnd())
-		{
-			_start = _end;
-			ScanToken();
-		}
-
-		return _tokens;
-	}
+    private readonly List<Token> _tokens = [];
 
 
-	private void ScanToken()
-	{
-		char ch = Advance();
+    public List<Token> Scan(string source)
+    {
+        _tokens.Clear();
 
-		switch (ch)
-		{
-		case ' ':
-		case '\n':
-		case '\t':
-			break;
+        _source = source;
+        _start = _end = 0;
 
-		case ':': AddToken(TokenType.Colon); break;
+        while (!AtEnd())
+        {
+            _start = _end;
+            ScanToken();
+        }
 
-		case '"':
-			StringValue();
-			break;
-
-		default:
-			if (char.IsLetter(ch))
-				Identifier();
-
-			else if (char.IsDigit(ch))
-				NumberValue();
-
-			else
-				throw new InvalidTokenException("Invalid token.");
-
-			break;
-		}
-	}
+        return _tokens;
+    }
 
 
-	private void Identifier()
-	{
-		while (!AtEnd() && char.IsLetterOrDigit(Peek()))
-			Advance();
+    private void ScanToken()
+    {
+        char ch = Advance();
 
-		AddToken(TokenType.Value, _source[_start .. _end]);
-	}
+        switch (ch)
+        {
+            case ' ':
+            case '\n':
+            case '\t':
+                break;
 
+            case ':': AddToken(TokenType.Colon); break;
 
-	private void StringValue()
-	{
-		while (!AtEnd() && Peek() != '"')
-			Advance();
+            case '"':
+                StringValue();
+                break;
 
-		if (AtEnd())
-			throw new UnclosedStringException("String not closed.");
+            default:
+                if (char.IsLetter(ch))
+                    Identifier();
 
-		Advance();
+                else if (char.IsDigit(ch))
+                    NumberValue();
 
-		string value = _source[(_start + 1) .. (_end - 1)];
+                else
+                    throw new InvalidTokenException("Invalid token.");
 
-		AddToken(TokenType.Value, value);
-	}
-
-
-	private void NumberValue()
-	{
-		while (!AtEnd() && char.IsDigit(Peek()))
-			Advance();
-
-		_ = int.TryParse(_source[_start .. _end], out int result);
-
-		AddToken(TokenType.Value, result);
-	}
+                break;
+        }
+    }
 
 
-	private void AddToken(TokenType type)
-		=> _tokens.Add(new Token(_source[_start .. _end], _start, _end, null, type));
+    private void Identifier()
+    {
+        while (!AtEnd() && char.IsLetterOrDigit(Peek()))
+            Advance();
 
-	private void AddToken(TokenType type, object value)
-		=> _tokens.Add(new Token(_source[_start .. _end], _start, _end, value, type));
+        AddToken(TokenType.Value, _source[_start.._end]);
+    }
 
 
-	private bool AtEnd() => _end >= _source.Length;
+    private void StringValue()
+    {
+        while (!AtEnd() && Peek() != '"')
+            Advance();
 
-	private char Advance() => _source[_end++];
-	private char Peek() => _source[_end];
+        if (AtEnd())
+            throw new UnclosedStringException("String not closed.");
+
+        Advance();
+
+        string value = _source[(_start + 1)..(_end - 1)];
+
+        AddToken(TokenType.Value, value);
+    }
+
+
+    private void NumberValue()
+    {
+        while (!AtEnd() && char.IsDigit(Peek()))
+            Advance();
+
+        _ = int.TryParse(_source[_start.._end], out int result);
+
+        AddToken(TokenType.Value, result);
+    }
+
+
+    private void AddToken(TokenType type)
+        => _tokens.Add(new Token(_source[_start.._end], _start, _end, null, type));
+
+    private void AddToken(TokenType type, object value)
+        => _tokens.Add(new Token(_source[_start.._end], _start, _end, value, type));
+
+
+    private bool AtEnd() => _end >= _source.Length;
+
+    private char Advance() => _source[_end++];
+    private char Peek() => _source[_end];
 }
