@@ -24,5 +24,5 @@ public class ClientList : ICommand
 public class ClientRemove : ICommand
 {
     public void Execute(DataTransferStructure requestData, List<object?> args)
-        => ServerState.Server?.RemoveClient(args[0] as string ?? "");
+        => ServerState.Server?.RemoveClientAndRequestListener(args[0] as string ?? "");
 }

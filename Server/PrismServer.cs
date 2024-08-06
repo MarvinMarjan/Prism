@@ -1,16 +1,23 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 using Specter.Debug.Prism.Client;
 using Specter.Debug.Prism.Exceptions;
-using System.Threading.Tasks;
 
 
 namespace Specter.Debug.Prism.Server;
+
+
+public class PrismServerClientEventArgs(PrismClient? client) : EventArgs
+{
+    public PrismClient? Client { get; init; } = client;
+}
 
 
 public abstract partial class PrismServer : TcpListener
@@ -20,16 +27,28 @@ public abstract partial class PrismServer : TcpListener
     public RequestManager RequestManager { get; set; }
 
 
-    public delegate void ClientEventHandler(PrismClient client);
-    public delegate void ClientRegistrationStartEventHandler();
-    public delegate void ClientRegistrationEndEventHandler(PrismClient client);
+    public delegate void ClientEventHandler(object? sender, PrismServerClientEventArgs args);
 
 
-    public event ClientEventHandler? ClientAddedEvent;
-    public event ClientEventHandler? ClientRemovedEvent;
+    public event ClientEventHandler? ClientAdded;
+    public event ClientEventHandler? ClientRemoved;
 
-    public event ClientRegistrationStartEventHandler? ClientRegistrationStartEvent;
-    public event ClientRegistrationEndEventHandler? ClientRegistrationEndEvent;
+    public event ClientEventHandler? ClientRegistrationStart;
+    public event ClientEventHandler? ClientRegistrationEnd;
+
+
+
+    protected virtual void OnClientAdded(PrismServerClientEventArgs args)
+        => ClientAdded?.Invoke(this, args);
+    
+    protected virtual void OnClientRemoved(PrismServerClientEventArgs args)
+        => ClientRemoved?.Invoke(this, args);
+
+    protected virtual void OnClientRegistrationStart(PrismServerClientEventArgs args)
+        => ClientRegistrationStart?.Invoke(this, args);
+
+    protected virtual void OnClientRegistrationEnd(PrismServerClientEventArgs args)
+        => ClientRegistrationEnd?.Invoke(this, args);
 
 
 
@@ -57,14 +76,27 @@ public abstract partial class PrismServer : TcpListener
         AddClient(client);
         RequestManager.AddClientRequestListener(client, out RequestListener listener);
 
-        listener.ValidRequestListenedEvent += requestData => RequestManager.AddClientRequest(requestData);
-        listener.InvalidRequestListenedEvent += RemoveClientAndRequestListener;
+        // ValidRequestListened event is not raised if a null request is received,
+        // so no problem with using "!"
+        listener.ValidRequestListened += (_, args)
+            => RequestManager.AddClientRequest(args.RequestData!.Value);
+
+        // InvalidRequestListened event is always raised with the Client property
+        // initialized, so no problem with using "!"
+        listener.InvalidRequestListened += (_, args)
+            => RemoveClientAndRequestListener(args.Client!);
     }
 
     public void RemoveClientAndRequestListener(PrismClient client)
     {
         RemoveClient(client);
         RequestManager.RemoveClientRequestListener(client);
+    }
+
+    public void RemoveClientAndRequestListener(string clientName)
+    {
+        RemoveClient(clientName, out PrismClient client);
+        RequestManager.RemoveClientRequestListener(client); // FIXME: removing client by command throws AggregateException...
     }
 
 
@@ -75,7 +107,7 @@ public abstract partial class PrismServer : TcpListener
             throw new ClientAlreadyExistsException(client.Name, "Can't add new client, it already exists.");
 
         Clients.TryAdd(client.Name, client);
-        ClientAddedEvent?.Invoke(client);
+        OnClientAdded(new(client));
     }
 
     public void RemoveClient(PrismClient client)
@@ -84,14 +116,15 @@ public abstract partial class PrismServer : TcpListener
             throw new ClientDoesNotExistsException(client.Name, "Could not find client.");
 
         Clients.TryRemove(client.Name, out _);
-        ClientRemovedEvent?.Invoke(client);
+        OnClientRemoved(new(client));
     }
 
-    public void RemoveClient(string clientName)
+    public void RemoveClient(string clientName, out PrismClient removedClient)
     {
         if (!Clients.TryGetValue(clientName, out PrismClient? client))
             throw new ClientDoesNotExistsException(clientName, "Could not find client.");
 
+        removedClient = client;
         RemoveClient(client);
     }
 
@@ -109,7 +142,7 @@ public abstract partial class PrismServer : TcpListener
     {
         try
         {
-            ClientRegistrationStartEvent?.Invoke();
+            OnClientRegistrationStart(new(null));
 
             DataTransferStructure? registrationData = new StreamReader(client.GetStream()).ReadDataTransfer();
 
@@ -118,7 +151,7 @@ public abstract partial class PrismServer : TcpListener
 
             PrismClient prismClient = new(validRegistrationData.ClientName, client);
 
-            ClientRegistrationEndEvent?.Invoke(prismClient);
+            OnClientRegistrationEnd(new(prismClient));
 
             AddClientAndRequestListener(prismClient);
             return prismClient;

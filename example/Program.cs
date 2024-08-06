@@ -64,14 +64,9 @@ public class Server : PrismServer
 		_waitForNewClientsThread = new(new ThreadStart(WaitForNewClientsThread));
 		_waitForNewClientsThread.Start();
 
-		// events
-		ClientAddedEvent += OnClientAdded;
-		ClientRemovedEvent += OnClientRemoved;
-		ClientRegistrationStartEvent += OnClientRegistrationStart;
-		ClientRegistrationEndEvent += OnClientRegistrationEnd;
-
-		RequestManager.ClientRequestListenerAddedEvent
-			+= listener => listener.RequestListenerFailedEvent += OnRequestListenerFail;
+		RequestManager.ClientRequestListenerAdded
+			+= (_, args)
+                => args.Listener.RequestListenerFailed += OnRequestListenerFail;
 
 		Logger.ServerMessage($"Server running at port {ColorValue.Underline.Paint(port.ToString())}.");
 	}
@@ -94,21 +89,37 @@ public class Server : PrismServer
 
 
 
-	private void OnRequestListenerFail(RequestListener listener, Exception exception)
-		=> Logger.ServerError(exception.Message);
+	private void OnRequestListenerFail(object? sender, ClientRequestListenerFailedEventArgs args)
+		=> Logger.ServerError(args.Exception.Message);
 
 
-	private void OnClientRegistrationStart()
-		=> Logger.ServerMessage("New client connected, waiting for registration...");
+    protected override void OnClientRegistrationStart(PrismServerClientEventArgs args)
+    {
+        base.OnClientRegistrationStart(args);
 
-	private void OnClientRegistrationEnd(PrismClient client)
-		=> Logger.ServerMessage($"Client registrated as {client.Name.FGBGreen()}");
+        Logger.ServerMessage("New client connected, waiting for registration...");
+    }
 
-	private void OnClientAdded(PrismClient client)
-		=> Logger.ServerMessage($"Added client {client.Name.FGBGreen()}");
+    protected override void OnClientRegistrationEnd(PrismServerClientEventArgs args)
+    {
+        base.OnClientRegistrationEnd(args);
 
-	private void OnClientRemoved(PrismClient client)
-		=> Logger.ServerMessage($"Removed client {client.Name.FGBGreen()}");
+        Logger.ServerMessage($"Client registrated as {args.Client?.Name.FGBGreen()}");
+    }
+
+    protected override void OnClientAdded(PrismServerClientEventArgs args)
+    {
+        base.OnClientAdded(args);
+
+        Logger.ServerMessage($"Added client {args.Client?.Name.FGBGreen()}");
+    }
+
+    protected override void OnClientRemoved(PrismServerClientEventArgs args)
+    {
+        base.OnClientRemoved(args);
+
+        Logger.ServerMessage($"Removed client {args.Client?.Name.FGBGreen()}");
+    }
 }
 
 
