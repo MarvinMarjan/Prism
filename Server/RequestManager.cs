@@ -1,12 +1,12 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 using Specter.Debug.Prism.Client;
 using Specter.Debug.Prism.Commands;
 using Specter.Debug.Prism.Exceptions;
-using System.Threading.Tasks;
 
 
 namespace Specter.Debug.Prism.Server;
@@ -42,7 +42,7 @@ public delegate void ClientRequestListenerEventHandler(object? sender, ClientReq
 public class RequestListener
 {
     public PrismClient Client { get; init; }
-    public Thread Thread { get; init; }
+    public Task Task { get; init; }
     public CancellationTokenSource CancellationTokenSource { get; init; }
 
 
@@ -68,32 +68,30 @@ public class RequestListener
     public RequestListener(PrismClient client)
     {
         Client = client;
+
         CancellationTokenSource = new();
 
-        Thread = new(ListenForRequestThread);
-        Thread.Start();
+        Task = new(ListenForRequestThread, CancellationTokenSource.Token);
+        Task.Start();
     }
 
 
 
     private void ListenForRequestThread()
     {
-        while (!CancellationTokenSource.Token.IsCancellationRequested)
+        while (true)
         {
-            DataTransferStructure? requestData = null;
+            DataTransferStructure? requestData;
 
             try
             {
                 requestData = Client.Reader.ReadDataTransferAsync(CancellationTokenSource.Token).Result;
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not AggregateException || !CancellationTokenSource.Token.IsCancellationRequested)
             {
                 OnRequestListenerFailed(new(this, e));
                 return;
             }
-
-            if (CancellationTokenSource.Token.IsCancellationRequested)
-                break;
 
             if (requestData is not null)
                 OnValidRequestListened(new(Client, requestData));

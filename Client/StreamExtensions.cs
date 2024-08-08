@@ -17,10 +17,10 @@ public static class StreamExtensions
     public static async Task<DataTransferStructure?> ReadDataTransferAsync(this StreamReader stream, CancellationToken cancellationToken)
     {
         string? data = await stream.ReadLineAsync(cancellationToken);
-        return data is null ? null : DataTransferStructure.FromJson(data);
+        return data is null || cancellationToken.IsCancellationRequested ? null : DataTransferStructure.FromJson(data);
     }
 
-    public static async Task<DataTransferStructure?> ReadDataTransferAsync(this StreamReader stream)
+    public static async Task<DataTransferStructure?> ReadDataTransferA(this StreamReader stream)
     {
         string? data = await stream.ReadLineAsync();
         return data is null ? null : DataTransferStructure.FromJson(data);
